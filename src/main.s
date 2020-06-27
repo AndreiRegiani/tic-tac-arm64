@@ -1,5 +1,6 @@
 /*
  *  Tic-Tac-ARM64 by @AndreiRegiani
+ *  GPL-3.0 License
 */
 
 // System calls [linux/include/uapi/asm-generic/unistd.h]

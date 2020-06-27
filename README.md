@@ -1,5 +1,5 @@
 # Tic-Tac-ARM64
-Tic-Tac-Toe written in assembly for ARM 64-bit / AArch64.
+Tic-Tac-Toe written in ARM 64-bit assembly (AArch64) for learning purposes.
 
 ## Runtime Requirements
 * POSIX compatible OS: Linux, Android, ...
@@ -7,7 +7,7 @@ Tic-Tac-Toe written in assembly for ARM 64-bit / AArch64.
 * System calls used: `read()`, `write()`, `exit()`
 * No libc
 
-## Cross-compiling from Ubuntu (x86_64)
+## Cross-compiling from Ubuntu x86-64
 Dependencies:
 ```
 $ sudo apt install gcc-aarch64-linux-gnu
