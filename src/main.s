@@ -22,9 +22,10 @@ current_player: .byte   x_mark
 new_line:       .byte   '\n'
 space:          .byte   ' '
 input_position: .byte   0, 0
+total_moves:    .byte   0
 
 // Strings
-welcome_string:     .ascii  "### Tic-Tac ARM64 ###\nCoordinates:\n\n1 2 3\n4 5 6\n7 8 9\n"
+welcome_string:     .ascii  "### Tic-Tac-ARM64 ###\nCoordinates:\n\n1 2 3\n4 5 6\n7 8 9\n"
 welcome_string_len = . - welcome_string
 
 enter_position_str:     .ascii  "\nEnter position (1-9): "
@@ -34,7 +35,10 @@ invalid_str:     .ascii  "Invalid move, try again.\n"
 invalid_str_len = . - invalid_str
 
 win_str:     .ascii  "\n>>> Player has won: "
-win_str_len = . - invalid_str
+win_str_len = . - win_str
+
+draw_str:     .ascii  "\n>>> Game over: It's a draw!\n"
+draw_str_len = . - draw_str
 
 
 .text
@@ -228,6 +232,16 @@ player_won:
     b       exit
 
 
+draw_game:
+    mov     x0, stdout
+    ldr     x1, =draw_str
+    mov     x2, draw_str_len
+    mov     x8, SYS_write
+    svc     #0
+
+    b       exit
+
+
 draw_board:
     mov     x9, #0 // counter
 
@@ -283,7 +297,13 @@ make_move:
 
     mov     x13, x1
     ldrb    w14, [x13]
-    sub     w14, w14, '1' // ASCII offset, now "0"=0x00, "1"=0x01
+    sub     w14, w14, '1' // ASCII offset, now "1" = 0x01, "9" = 0x09
+
+    // check input is valid: within 1 to 9
+    cmp     w14, #0
+    b.lt    .invalid_move
+    cmp     w14, #9
+    b.gt    .invalid_move
 
     ldr     x10, =board
     ldr     x11, =current_player
@@ -294,6 +314,17 @@ make_move:
     cmp     x13, '-'
     bne     .invalid_move
     strb    w12, [x10, x14]
+
+    // Increment total_moves
+    ldr     x14, =total_moves
+    ldrb    w15, [x14]
+    add     w15, w15, #1
+    strb    w15, [x14]
+
+    // Check for draw (game over)
+    cmp     w15, #9  // maximum total moves
+    b.eq    draw_game
+
     ret
 
     .invalid_move:
