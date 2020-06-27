@@ -42,7 +42,7 @@ win_str_len = . - invalid_str
 
 
 _start:
-	bl      welcome
+    bl      welcome
 
     .main_loop:
     bl      make_move
@@ -59,10 +59,10 @@ _start:
 
 welcome:
     mov     x0, stdout
-	ldr     x1, =welcome_string
-	mov     x2, welcome_string_len
-	mov     x8, SYS_write
-	svc     #0
+    ldr     x1, =welcome_string
+    mov     x2, welcome_string_len
+    mov     x8, SYS_write
+    svc     #0
     ret
 
 
@@ -208,22 +208,22 @@ check_game_over:
 
 player_won:
     mov     x0, stdout
-	ldr     x1, =win_str
-	mov     x2, win_str_len
-	mov     x8, SYS_write
-	svc     #0
+    ldr     x1, =win_str
+    mov     x2, win_str_len
+    mov     x8, SYS_write
+    svc     #0
 
     mov     x0, stdout
-	ldr     x1, =current_player
-	mov     x2, #1
-	mov     x8, SYS_write
-	svc     #0
+    ldr     x1, =current_player
+    mov     x2, #1
+    mov     x8, SYS_write
+    svc     #0
 
     mov     x0, stdout
-	ldr     x1, =new_line
-	mov     x2, #1
-	mov     x8, SYS_write
-	svc     #0
+    ldr     x1, =new_line
+    mov     x2, #1
+    mov     x8, SYS_write
+    svc     #0
 
     b       exit
 
@@ -270,10 +270,10 @@ draw_board:
 
 make_move:
     mov     x0, stdout
-	ldr     x1, =enter_position_str
-	mov     x2, enter_position_str_len
-	mov     x8, SYS_write
-	svc     #0
+    ldr     x1, =enter_position_str
+    mov     x2, enter_position_str_len
+    mov     x8, SYS_write
+    svc     #0
 
     mov     x0, stdin
     ldr     x1, =input_position
@@ -298,10 +298,10 @@ make_move:
 
     .invalid_move:
     mov     x0, stdout
-	ldr     x1, =invalid_str
-	mov     x2, invalid_str_len
-	mov     x8, SYS_write
-	svc     #0
+    ldr     x1, =invalid_str
+    mov     x2, invalid_str_len
+    mov     x8, SYS_write
+    svc     #0
     b       make_move
 
 
@@ -326,6 +326,6 @@ switch_player:
 
 exit:
     mov     x0, #0 // EXIT_SUCCESS
-	mov     x8, SYS_exit
-	svc     #0
+    mov     x8, SYS_exit
+    svc     #0
     ret
