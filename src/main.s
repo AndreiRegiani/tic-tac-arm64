@@ -2,6 +2,7 @@
  *  Tic-Tac-ARM64 by @AndreiRegiani
  *  GPL-3.0 License
 */
+.arch armv8-a
 
 // System calls [linux/include/uapi/asm-generic/unistd.h]
 .equ    SYS_read,   63
@@ -12,33 +13,33 @@
 .equ    stdin,      0
 .equ    stdout,     1
 
-// Gameplay constants
+// Gameplay
 .equ    x_mark,     'X'
 .equ    o_mark,     'O'
 
 .data
 board:          .byte   '-', '-', '-', '-', '-', '-', '-', '-', '-'
 current_player: .byte   x_mark
-new_line:       .byte   '\n'
-space:          .byte   ' '
 input_position: .byte   0, 0
 total_moves:    .byte   0
+space:          .byte   ' '
+new_line:       .byte   '\n'
 
 // Strings
-welcome_string:     .ascii  "### Tic-Tac-ARM64 ###\nCoordinates:\n\n1 2 3\n4 5 6\n7 8 9\n"
-welcome_string_len = . - welcome_string
+welcome_str:     .ascii  "### Tic-Tac-ARM64 ###\nCoordinates:\n\n1 2 3\n4 5 6\n7 8 9\n"
+welcome_str_len = . - welcome_str
 
-enter_position_str:     .ascii  "\nEnter position (1-9): "
+enter_position_str:     .ascii  "\nMake a move (1-9): "
 enter_position_str_len = . - enter_position_str
 
-invalid_str:     .ascii  "Invalid move, try again.\n"
+invalid_str:     .ascii  ">>> Invalid move, try again.\n"
 invalid_str_len = . - invalid_str
 
-win_str:     .ascii  "\n>>> Player has won: "
+win_str:     .ascii  "\n>>> Victory by "
 win_str_len = . - win_str
 
-draw_str:     .ascii  "\n>>> Game over: It's a draw!\n"
-draw_str_len = . - draw_str
+gameover_str:     .ascii  "\n>>> Game over: it's a draw!\n"
+gameover_str_len = . - gameover_str
 
 
 .text
@@ -52,19 +53,14 @@ _start:
     bl      make_move
     bl      draw_board
     bl      check_game_over
-    cmp     x0, #1
-    beq     .game_over
     bl      switch_player
     b       .main_loop
-
-    .game_over:
-    bl      exit
 
 
 welcome:
     mov     x0, stdout
-    ldr     x1, =welcome_string
-    mov     x2, welcome_string_len
+    ldr     x1, =welcome_str
+    mov     x2, welcome_str_len
     mov     x8, SYS_write
     svc     #0
     ret
@@ -81,6 +77,7 @@ check_game_over:
         w13  w14  w15
 
         w16  w17  w18
+        
     */
     ldr     x9, =board
     ldrb    w10, [x9, #0]
@@ -99,11 +96,11 @@ check_game_over:
         - - -
         - - -
     */
-    cmp     w10, w2  // w2 = current_player, w10 = first element of the board
+    cmp     w10, w2  // w10 = board[0], w2 = current_player
     bne     .win_case_2
-    cmp     w11, w2
+    cmp     w11, w2 // w11 = board[1], w2 = current_player
     bne     .win_case_2
-    cmp     w12, w2
+    cmp     w12, w2 // w12 = board[2], w2 = current_player
     bne     .win_case_2
     b       player_won
 
@@ -206,7 +203,6 @@ check_game_over:
     b       player_won
 
     .return:
-    mov     x0, #0 // false: no winners yet
     ret
 
 
@@ -232,10 +228,12 @@ player_won:
     b       exit
 
 
-draw_game:
+game_over:
+    bl      draw_board
+    
     mov     x0, stdout
-    ldr     x1, =draw_str
-    mov     x2, draw_str_len
+    ldr     x1, =gameover_str
+    mov     x2, gameover_str_len
     mov     x8, SYS_write
     svc     #0
 
@@ -247,7 +245,7 @@ draw_board:
 
     .loop: 
     cmp     x9, #9
-    bge     .endloop
+    bge     .end_loop
 
     mov     x0, stdout
     adr     x1, board
@@ -260,14 +258,14 @@ draw_board:
     svc     #0
 
     cmp     x9, #2
-    beq     .line_print
+    beq     .new_line
     cmp     x9, #5
-    beq     .line_print
+    beq     .new_line
     cmp     x9, #8
-    beq     .line_print
+    beq     .new_line
     b       .skip_print
 
-    .line_print:
+    .new_line:
     mov     x0, stdout
     ldr     x1, =new_line
     mov     x2, #1
@@ -278,7 +276,7 @@ draw_board:
     add     x9, x9, #1
     b       .loop
 
-    .endloop:
+    .end_loop:
     ret
 
 
@@ -299,7 +297,7 @@ make_move:
     ldrb    w14, [x13]
     sub     w14, w14, '1' // ASCII offset, now "1" = 0x01, "9" = 0x09
 
-    // check input is valid: within 1 to 9
+    // Check input is valid (1-9)
     cmp     w14, #0
     b.lt    .invalid_move
     cmp     w14, #9
@@ -309,7 +307,7 @@ make_move:
     ldr     x11, =current_player
     ldrb    w12, [x11]
 
-    // Verify the desired slot is empty
+    // Check the desired slot is empty
     ldrb    w13, [x10, x14]
     cmp     x13, '-'
     bne     .invalid_move
@@ -322,8 +320,8 @@ make_move:
     strb    w15, [x14]
 
     // Check for draw (game over)
-    cmp     w15, #9  // maximum total moves
-    b.eq    draw_game
+    cmp     w15, #9
+    b.eq    game_over
 
     ret
 
@@ -333,6 +331,7 @@ make_move:
     mov     x2, invalid_str_len
     mov     x8, SYS_write
     svc     #0
+
     b       make_move
 
 
