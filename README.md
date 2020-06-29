@@ -14,7 +14,7 @@ Dependencies:
 $ sudo apt install gcc-aarch64-linux-gnu
 
 # Emulation:
-$ sudo apt-get install qemu-aarch64
+$ sudo apt install qemu-aarch64
 ```
 
 Compiling & Running:
